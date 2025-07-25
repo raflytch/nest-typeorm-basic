@@ -3,74 +3,64 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
 } from '@nestjs/common';
+import { ArticleService } from './article.service';
+import { CreateArticleDto } from './dto/create-article.dto';
+import { IArticle } from './interfaces/article.interface';
+import { FindOneArticleDto } from './dto/find-article.dto';
 
 @Controller('article')
 export class ArticleController {
+  constructor(private readonly articleService: ArticleService) {}
+
   @Get()
-  findAll(): Record<string, unknown>[] {
-    return [
-      { id: 1, title: 'NestJS Basics', content: 'Learn the basics of NestJS.' },
-      {
-        id: 2,
-        title: 'Advanced NestJS',
-        content: 'Dive deeper into NestJS features.',
-      },
-    ];
+  @HttpCode(HttpStatus.OK)
+  findAll(): IArticle[] {
+    return this.articleService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Record<string, unknown> | null {
-    const articles = this.findAll();
-    return articles.find((article) => article.id === Number(id)) || null;
+  @HttpCode(HttpStatus.OK)
+  findOne(@Param('id') id: FindOneArticleDto): IArticle | null {
+    const article = this.articleService.findOne(id);
+    if (!article) {
+      throw new NotFoundException(`Article with ID ${id.id} not found`);
+    }
+    return article;
   }
 
   @Post()
-  create(
-    @Body() body: { title: string; content: string },
-  ): Record<string, unknown> {
-    const { title, content } = body;
-    const newArticle = {
-      id: Math.floor(Math.random() * 1000),
-      title,
-      content,
-    };
-    const articles = this.findAll();
-    articles.push(newArticle);
-    return newArticle;
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() createArticleDto: CreateArticleDto): IArticle {
+    return this.articleService.create(createArticleDto);
   }
 
   @Put(':id')
+  @HttpCode(HttpStatus.OK)
   update(
-    @Param('id') id: string,
-    @Body() body: { title?: string; content?: string },
-  ): Record<string, unknown> | null {
-    const articles = this.findAll();
-    const articleIndex = articles.findIndex(
-      (article) => article.id === Number(id),
-    );
-    if (articleIndex === -1) return null;
-
-    const updatedArticle = {
-      ...articles[articleIndex],
-      ...body,
-    };
-    articles[articleIndex] = updatedArticle;
+    @Param('id') id: FindOneArticleDto,
+    @Body() updateArticleDto: CreateArticleDto,
+  ): IArticle | null {
+    const updatedArticle = this.articleService.update(id.id, updateArticleDto);
+    if (!updatedArticle) {
+      throw new NotFoundException(`Article with ID ${id.id} not found`);
+    }
     return updatedArticle;
   }
 
   @Delete(':id')
-  delete(@Param('id') id: string): boolean {
-    const articles = this.findAll();
-    const articleIndex = articles.findIndex(
-      (article) => article.id === Number(id),
-    );
-    if (articleIndex === -1) return false;
-
-    articles.splice(articleIndex, 1);
+  @HttpCode(HttpStatus.NO_CONTENT)
+  delete(@Param('id') id: FindOneArticleDto): boolean {
+    const deleted = this.articleService.delete(id.id);
+    if (!deleted) {
+      throw new NotFoundException(`Article with ID ${id.id} not found`);
+    }
     return true;
   }
 }
