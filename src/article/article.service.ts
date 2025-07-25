@@ -3,10 +3,11 @@ import { IArticle } from './interfaces/article.interface';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { FindOneArticleDto } from './dto/find-article.dto';
 import { randomUUID } from 'crypto';
+import { UpdateArticleDto } from './dto/update-article.dto';
 
 @Injectable()
 export class ArticleService {
-  private readonly articles: IArticle[] = [];
+  private articles: IArticle[] = [];
 
   create(createArticleDto: CreateArticleDto): IArticle {
     const newArticle: IArticle = {
@@ -28,29 +29,19 @@ export class ArticleService {
     );
   }
 
-  update(id: string, updateArticleDto: CreateArticleDto): IArticle | null {
-    const articleIndex = this.articles.findIndex(
-      (article) => article.id === id,
-    );
-    if (articleIndex === -1) {
-      return null;
-    }
-    const updatedArticle: IArticle = {
-      ...this.articles[articleIndex],
-      ...updateArticleDto,
-    };
-    this.articles[articleIndex] = updatedArticle;
-    return updatedArticle;
+  updateArticleByParams(
+    id: string,
+    updateArticleDto: UpdateArticleDto,
+  ): IArticle | null {
+    const article = this.articles.find((a) => a.id === id);
+    if (!article) return null;
+    Object.assign(article, updateArticleDto);
+    return article;
   }
 
   delete(id: string): boolean {
-    const articleIndex = this.articles.findIndex(
-      (article) => article.id === id,
-    );
-    if (articleIndex === -1) {
-      return false;
-    }
-    this.articles.splice(articleIndex, 1);
-    return true;
+    const initialLength = this.articles.length;
+    this.articles = this.articles.filter((article) => article.id !== id);
+    return this.articles.length < initialLength;
   }
 }

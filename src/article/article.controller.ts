@@ -14,6 +14,7 @@ import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { IArticle } from './interfaces/article.interface';
 import { FindOneArticleDto } from './dto/find-article.dto';
+import { UpdateArticleDto } from './dto/update-article.dto';
 
 @Controller('article')
 export class ArticleController {
@@ -45,13 +46,16 @@ export class ArticleController {
   @HttpCode(HttpStatus.OK)
   update(
     @Param('id') id: FindOneArticleDto,
-    @Body() updateArticleDto: CreateArticleDto,
+    @Body() updateArticleDto: UpdateArticleDto,
   ): IArticle | null {
-    const updatedArticle = this.articleService.update(id.id, updateArticleDto);
-    if (!updatedArticle) {
+    const article = this.articleService.updateArticleByParams(
+      id.id,
+      updateArticleDto,
+    );
+    if (!article) {
       throw new NotFoundException(`Article with ID ${id.id} not found`);
     }
-    return updatedArticle;
+    return article;
   }
 
   @Delete(':id')
