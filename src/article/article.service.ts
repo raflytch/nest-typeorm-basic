@@ -1,47 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { IArticle } from './interfaces/article.interface';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { FindOneArticleDto } from './dto/find-article.dto';
-import { randomUUID } from 'crypto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { Article } from './entities/article.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class ArticleService {
-  private articles: IArticle[] = [];
+  constructor(
+    @InjectRepository(Article) private ArticleRepository: Repository<Article>,
+  ) {}
 
-  create(createArticleDto: CreateArticleDto): IArticle {
-    const newArticle: IArticle = {
-      id: randomUUID(),
-      ...createArticleDto,
-    };
-    this.articles.push(newArticle);
-    return newArticle;
+  async create(createArticleDto: CreateArticleDto): Promise<Article> {
+    const newArticle = this.ArticleRepository.create(createArticleDto);
+    return this.ArticleRepository.save(newArticle);
   }
 
-  findAll(): IArticle[] {
-    return this.articles;
+  async findAll(): Promise<Article[]> {
+    return this.ArticleRepository.find();
   }
 
-  findOne(findOneArticleDto: FindOneArticleDto): IArticle | null {
-    return (
-      this.articles.find((article) => article.id === findOneArticleDto.id) ||
-      null
-    );
+  async findOne(findOneArticleDto: FindOneArticleDto): Promise<Article | null> {
+    return this.ArticleRepository.findOneBy(findOneArticleDto);
   }
 
-  updateArticleByParams(
+  async update(
     id: string,
     updateArticleDto: UpdateArticleDto,
-  ): IArticle | null {
-    const article = this.articles.find((a) => a.id === id);
-    if (!article) return null;
-    Object.assign(article, updateArticleDto);
-    return article;
+  ): Promise<Article | null> {
+    await this.ArticleRepository.update(id, updateArticleDto);
+    return this.ArticleRepository.findOneBy({ id });
   }
 
-  delete(id: string): boolean {
-    const initialLength = this.articles.length;
-    this.articles = this.articles.filter((article) => article.id !== id);
-    return this.articles.length < initialLength;
+  async remove(id: string): Promise<void> {
+    await this.ArticleRepository.delete(id);
   }
 }

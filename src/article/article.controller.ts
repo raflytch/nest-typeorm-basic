@@ -12,9 +12,8 @@ import {
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
-import { IArticle } from './interfaces/article.interface';
-import { FindOneArticleDto } from './dto/find-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { Article } from './entities/article.entity';
 
 @Controller('article')
 export class ArticleController {
@@ -22,49 +21,38 @@ export class ArticleController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  findAll(): IArticle[] {
+  findAll(): Promise<Article[]> {
     return this.articleService.findAll();
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
-  findOne(@Param('id') id: FindOneArticleDto): IArticle | null {
-    const article = this.articleService.findOne(id);
-    if (!article) {
-      throw new NotFoundException(`Article with ID ${id.id} not found`);
-    }
-    return article;
+  findOne(@Param('id') id: string): Promise<Article | null> {
+    return this.articleService.findOne({ id });
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createArticleDto: CreateArticleDto): IArticle {
+  create(@Body() createArticleDto: CreateArticleDto): Promise<Article> {
     return this.articleService.create(createArticleDto);
   }
 
   @Put(':id')
   @HttpCode(HttpStatus.OK)
   update(
-    @Param('id') id: FindOneArticleDto,
+    @Param('id') id: string,
     @Body() updateArticleDto: UpdateArticleDto,
-  ): IArticle | null {
-    const article = this.articleService.updateArticleByParams(
-      id.id,
-      updateArticleDto,
-    );
-    if (!article) {
-      throw new NotFoundException(`Article with ID ${id.id} not found`);
+  ): Promise<Article | null> {
+    const updatedArticle = this.articleService.update(id, updateArticleDto);
+    if (!updatedArticle) {
+      throw new NotFoundException(`Article with ID ${id} not found`);
     }
-    return article;
+    return updatedArticle;
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@Param('id') id: FindOneArticleDto): boolean {
-    const deleted = this.articleService.delete(id.id);
-    if (!deleted) {
-      throw new NotFoundException(`Article with ID ${id.id} not found`);
-    }
-    return true;
+  delete(@Param('id') id: string): Promise<void> {
+    return this.articleService.remove(id);
   }
 }
