@@ -17,8 +17,16 @@ export class ArticleService {
     return this.ArticleRepository.save(newArticle);
   }
 
-  async findAll(): Promise<Article[]> {
-    return this.ArticleRepository.find();
+  async findAll(
+    page: number,
+    limit: number,
+  ): Promise<{ data: Article[]; total: number; page: number; limit: number }> {
+    const [articles, total] = await this.ArticleRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+    return { data: articles, total, page, limit };
   }
 
   async findOne(findOneArticleDto: FindOneArticleDto): Promise<Article | null> {

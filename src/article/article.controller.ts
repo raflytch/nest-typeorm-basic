@@ -1,14 +1,17 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   HttpCode,
   HttpStatus,
   NotFoundException,
   Param,
+  ParseIntPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -21,8 +24,11 @@ export class ArticleController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  findAll(): Promise<Article[]> {
-    return this.articleService.findAll();
+  findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ): Promise<{ data: Article[]; total: number; page: number; limit: number }> {
+    return this.articleService.findAll(page, limit);
   }
 
   @Get(':id')
