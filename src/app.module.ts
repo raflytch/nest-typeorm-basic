@@ -5,6 +5,7 @@ import { ArticleModule } from './article/article.module';
 import { typeOrmConfig } from './config/database';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CategoryModule } from './category/category.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: typeOrmConfig,
     }),
     ArticleModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
